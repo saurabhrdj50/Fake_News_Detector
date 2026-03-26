@@ -195,6 +195,8 @@ In Render: **New → Web Service → connect your GitHub repo**.
 - **Start Command**:
   - `uvicorn backend.api.main:app --host 0.0.0.0 --port $PORT`
 
+> Render note: this repo pins Render’s Python via `runtime.txt` (uses Python 3.11) because TensorFlow wheels aren’t available for Python 3.14+ yet.
+
 Render **Environment Variables**:
 - `CORS_ORIGINS`: your Vercel URL(s), comma-separated  
   Example: `https://your-app.vercel.app,https://your-app-git-main-yourname.vercel.app`
