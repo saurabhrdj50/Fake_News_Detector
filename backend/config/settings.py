@@ -20,8 +20,8 @@ BACKEND_DIR = PROJECT_ROOT / "backend"
 @dataclass
 class ModelConfig:
     """Machine Learning Model Configuration"""
-    MODEL_PATH: str = str(PROJECT_ROOT / "models" / "fake_news_lstm_model.keras")
-    TOKENIZER_PATH: str = str(PROJECT_ROOT / "models" / "tokenizer.pkl")
+    MODEL_PATH: str = str(BACKEND_DIR / "models" / "fake_news_lstm_model.keras")
+    TOKENIZER_PATH: str = str(BACKEND_DIR / "models" / "tokenizer.pkl")
     MAX_SEQUENCE_LENGTH: int = 150
     EMBEDDING_DIM: int = 100
     LSTM_UNITS: int = 150
