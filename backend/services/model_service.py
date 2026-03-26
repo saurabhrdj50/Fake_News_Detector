@@ -48,6 +48,21 @@ class ModelService:
     def _load_artifacts(self) -> None:
         """Load model and tokenizer from disk"""
         try:
+            model_path = Path(model_config.MODEL_PATH)
+            tokenizer_path = Path(model_config.TOKENIZER_PATH)
+            
+            if not model_path.exists():
+                raise FileNotFoundError(
+                    f"Model file not found at {model_path}. "
+                    "Please ensure the model file is properly deployed."
+                )
+            
+            if not tokenizer_path.exists():
+                raise FileNotFoundError(
+                    f"Tokenizer file not found at {tokenizer_path}. "
+                    "Please ensure the tokenizer file is properly deployed."
+                )
+            
             logger.info(f"Loading model from {model_config.MODEL_PATH}")
             self.model = load_model(model_config.MODEL_PATH)
             logger.info("Model loaded successfully")
