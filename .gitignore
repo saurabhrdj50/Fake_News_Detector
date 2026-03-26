@@ -1,12 +1,57 @@
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
 venv/
 env/
-.env
-dataset/
-*.csv
-.ipynb_checkpoints/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
 
-# If you don't use Git LFS, uncomment the following to ignore large models:
-# *.keras
-# *.pkl
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+.DS_Store
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+dist/
+.cache/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Logs
+logs/
+*.log
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Keep data and models (using Git LFS)
+# Models are tracked via Git LFS
+
+# Large datasets (download separately; used for training only)
+data/*.csv
+

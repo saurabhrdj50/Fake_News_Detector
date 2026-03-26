@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base Styles */
+* {
+  @apply antialiased;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-gradient-to-br from-brand-900 via-blue-900 to-brand-900 text-white;
+  background-attachment: fixed;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  @apply w-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-white/5;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-brand-500/50 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-brand-500/70;
+}
+
+/* Glass Panel Effect */
+.glass-panel {
+  @apply bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl;
+}
+
+/* Glassmorphism Card */
+.glass-card {
+  @apply p-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl;
+}
+
+/* Button Animations */
+button {
+  @apply transition-all duration-300;
+}
+
+/* Input Styles */
+input,
+textarea {
+  @apply transition-all duration-300;
+}
+
+input:focus,
+textarea:focus {
+  @apply ring-2 ring-brand-500/20;
+}
+
+/* Smooth Fade In */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-on-scroll {
+  @apply opacity-0 transition-opacity duration-500;
+}
+
+.fade-in-on-scroll.opacity-100 {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+/* Gradient Text */
+.gradient-text {
+  @apply bg-gradient-to-r from-brand-400 to-cyan-400 bg-clip-text text-transparent;
+}
+
+/* Glow Effect */
+.glow {
+  @apply shadow-lg shadow-brand-500/50;
+}
+
+.glow:hover {
+  @apply shadow-xl shadow-brand-500/70;
+}
+
+/* Loading Spinner */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode specific */
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-track {
+    @apply bg-white/5;
+  }
+}
