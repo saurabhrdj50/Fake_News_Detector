@@ -242,8 +242,13 @@ async def startup_event():
     """Initialize services on startup"""
     logger.info(f"Starting {app_config.APP_NAME} v{app_config.APP_VERSION}")
     try:
-        # Only log, don't block startup on model loading
-        logger.info("Model service will be initialized on first request")
+        # Initialize model service at startup to catch any loading errors early
+        logger.info("Initializing model service...")
+        model_service = get_model_service()
+        if model_service.is_ready:
+            logger.info("Model service initialized successfully")
+        else:
+            logger.warning("Model service initialized but model is not ready")
     except Exception as e:
         logger.error(f"Startup warning: {str(e)}")
 
