@@ -56,24 +56,30 @@ class ModelService:
         model_path = Path(model_config.MODEL_PATH)
         tokenizer_path = Path(model_config.TOKENIZER_PATH)
         
-        logger.info(f"Current directory: {os.getcwd()}")
-        logger.info(f"Project root: {Path(__file__).parent.parent.parent}")
-        logger.info(f"Model path: {model_path}")
-        logger.info(f"Model exists: {model_path.exists()}")
-        logger.info(f"Tokenizer exists: {tokenizer_path.exists()}")
+        logger.info(f"CWD: {os.getcwd()}")
+        logger.info(f"settings.py location: {Path(__file__).parent.parent / 'config'}")
+        logger.info(f"PROJECT_ROOT: {model_config.MODEL_PATH}")
+        logger.info(f"Model path exists: {model_path.exists()}, resolved: {model_path.resolve()}")
+        logger.info(f"Tokenizer path exists: {tokenizer_path.exists()}")
         
         if not model_path.exists():
-            raise FileNotFoundError(f"Model file not found at {model_path}")
+            # Try absolute path
+            abs_model_path = Path(__file__).parent.parent.parent / "backend" / "models" / "fake_news_lstm_model.keras"
+            logger.info(f"Trying absolute path: {abs_model_path}")
+            if abs_model_path.exists():
+                model_path = abs_model_path
+            else:
+                # List all files in backend/models
+                models_dir = Path(__file__).parent.parent.parent / "backend" / "models"
+                logger.info(f"Files in {models_dir}: {list(models_dir.glob('*')) if models_dir.exists() else 'DIR NOT FOUND'}")
+                raise FileNotFoundError(f"Model file not found at {model_path}")
         
-        if not tokenizer_path.exists():
-            raise FileNotFoundError(f"Tokenizer file not found at {tokenizer_path}")
-        
-        logger.info(f"Loading model from {model_config.MODEL_PATH}")
-        self.model = load_model(model_config.MODEL_PATH)
+        logger.info(f"Loading model from {model_path}")
+        self.model = load_model(str(model_path))
         logger.info("Model loaded successfully")
         
-        logger.info(f"Loading tokenizer from {model_config.TOKENIZER_PATH}")
-        with open(model_config.TOKENIZER_PATH, "rb") as f:
+        logger.info(f"Loading tokenizer from {tokenizer_path}")
+        with open(str(tokenizer_path), "rb") as f:
             self.tokenizer = pickle.load(f)
         logger.info("Tokenizer loaded successfully")
     
