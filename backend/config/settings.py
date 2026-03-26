@@ -12,20 +12,20 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# Project root directory
-PROJECT_ROOT = Path(__file__).parent.parent.parent
-BACKEND_DIR = PROJECT_ROOT / "backend"
+# Project root directory - use explicit path resolution
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BACKEND_DIR = BASE_DIR / "backend"
 
-# Model paths - can be overridden by environment variables
-DEFAULT_MODEL_PATH = BACKEND_DIR / "models" / "fake_news_lstm_model.keras"
-DEFAULT_TOKENIZER_PATH = BACKEND_DIR / "models" / "tokenizer.pkl"
+# Model paths - use absolute paths from base directory
+MODEL_FILENAME = "fake_news_lstm_model.keras"
+TOKENIZER_FILENAME = "tokenizer.pkl"
 
 
 @dataclass
 class ModelConfig:
     """Machine Learning Model Configuration"""
-    MODEL_PATH: str = os.getenv("MODEL_PATH", str(DEFAULT_MODEL_PATH))
-    TOKENIZER_PATH: str = os.getenv("TOKENIZER_PATH", str(DEFAULT_TOKENIZER_PATH))
+    MODEL_PATH: str = os.getenv("MODEL_PATH", str(BACKEND_DIR / "models" / MODEL_FILENAME))
+    TOKENIZER_PATH: str = os.getenv("TOKENIZER_PATH", str(BACKEND_DIR / "models" / TOKENIZER_FILENAME))
     MAX_SEQUENCE_LENGTH: int = 150
     EMBEDDING_DIM: int = 100
     LSTM_UNITS: int = 150
@@ -72,7 +72,7 @@ class AppConfig:
     
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
-    LOG_FILE: str = str(PROJECT_ROOT / "logs" / "app.log")
+    LOG_FILE: str = str(BASE_DIR / "logs" / "app.log")
     
     # API
     API_PREFIX: str = "/api/v1"
@@ -84,7 +84,7 @@ class AppConfig:
     CACHE_TTL: int = 300  # 5 minutes
     
     # Dataset
-    DATASET_PATH: str = str(PROJECT_ROOT / "dataset")
+    DATASET_PATH: str = str(BASE_DIR / "dataset")
     
     # Artifacts
     ARTIFACTS_PATH: str = str(BACKEND_DIR / "artifacts")
