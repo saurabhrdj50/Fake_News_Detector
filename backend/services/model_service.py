@@ -13,6 +13,8 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+import os
+
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from backend.config.settings import model_config
@@ -43,41 +45,37 @@ class ModelService:
         self.model = None
         self.tokenizer = None
         self.preprocessor = get_preprocessor()
-        self._load_artifacts()
+        try:
+            self._load_artifacts()
+        except Exception as e:
+            logger.error(f"Failed to load model artifacts during init: {str(e)}")
+            # Don't re-raise - allow service to exist but mark as not ready
     
     def _load_artifacts(self) -> None:
         """Load model and tokenizer from disk"""
-        try:
-            model_path = Path(model_config.MODEL_PATH)
-            tokenizer_path = Path(model_config.TOKENIZER_PATH)
-            
-            if not model_path.exists():
-                raise FileNotFoundError(
-                    f"Model file not found at {model_path}. "
-                    "Please ensure the model file is properly deployed."
-                )
-            
-            if not tokenizer_path.exists():
-                raise FileNotFoundError(
-                    f"Tokenizer file not found at {tokenizer_path}. "
-                    "Please ensure the tokenizer file is properly deployed."
-                )
-            
-            logger.info(f"Loading model from {model_config.MODEL_PATH}")
-            self.model = load_model(model_config.MODEL_PATH)
-            logger.info("Model loaded successfully")
-            
-            logger.info(f"Loading tokenizer from {model_config.TOKENIZER_PATH}")
-            with open(model_config.TOKENIZER_PATH, "rb") as f:
-                self.tokenizer = pickle.load(f)
-            logger.info("Tokenizer loaded successfully")
-            
-        except FileNotFoundError as e:
-            logger.error(f"Artifact file not found: {str(e)}")
-            raise
-        except Exception as e:
-            logger.error(f"Error loading artifacts: {str(e)}")
-            raise
+        model_path = Path(model_config.MODEL_PATH)
+        tokenizer_path = Path(model_config.TOKENIZER_PATH)
+        
+        logger.info(f"Current directory: {os.getcwd()}")
+        logger.info(f"Project root: {Path(__file__).parent.parent.parent}")
+        logger.info(f"Model path: {model_path}")
+        logger.info(f"Model exists: {model_path.exists()}")
+        logger.info(f"Tokenizer exists: {tokenizer_path.exists()}")
+        
+        if not model_path.exists():
+            raise FileNotFoundError(f"Model file not found at {model_path}")
+        
+        if not tokenizer_path.exists():
+            raise FileNotFoundError(f"Tokenizer file not found at {tokenizer_path}")
+        
+        logger.info(f"Loading model from {model_config.MODEL_PATH}")
+        self.model = load_model(model_config.MODEL_PATH)
+        logger.info("Model loaded successfully")
+        
+        logger.info(f"Loading tokenizer from {model_config.TOKENIZER_PATH}")
+        with open(model_config.TOKENIZER_PATH, "rb") as f:
+            self.tokenizer = pickle.load(f)
+        logger.info("Tokenizer loaded successfully")
     
     def predict(self, text: str) -> Tuple[str, float, float, float]:
         """
