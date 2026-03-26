@@ -5,7 +5,10 @@
 
 import axios, { AxiosInstance } from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE =
+  import.meta.env.MODE === "development"
+    ? "http://localhost:8000"
+    : import.meta.env.VITE_API_URL;
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: `${API_BASE}/api/v1`,
