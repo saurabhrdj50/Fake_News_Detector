@@ -1,31 +1,12 @@
+
 """
 Configuration Management Module
 Centralized settings for the Fake News Detection application
 """
 
 import os
-from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Optional
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
-
-# Project root directory - use explicit path resolution
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-BACKEND_DIR = BASE_DIR / "backend"
-
-# Model paths - use absolute paths from base directory
-MODEL_FILENAME = "fake_news_lstm_model.keras"
-TOKENIZER_FILENAME = "tokenizer.pkl"
-
-
-@dataclass
-class ModelConfig:
-    """Machine Learning Model Configuration"""
-    MODEL_PATH: str = os.getenv("MODEL_PATH", str(BACKEND_DIR / "models" / MODEL_FILENAME))
-    TOKENIZER_PATH: str = os.getenv("TOKENIZER_PATH", str(BACKEND_DIR / "models" / TOKENIZER_FILENAME))
+from dataclass...models" / MODEL_FILENAME)))
+    TOKENIZER_PATH: str = field(default_factory=lambda: os.getenv("TOKENIZER_PATH", str(BACKEND_DIR / "models" / TOKENIZER_FILENAME)))
     MAX_SEQUENCE_LENGTH: int = 150
     EMBEDDING_DIM: int = 100
     LSTM_UNITS: int = 150
