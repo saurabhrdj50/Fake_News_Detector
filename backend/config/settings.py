@@ -16,12 +16,16 @@ load_dotenv()
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 BACKEND_DIR = PROJECT_ROOT / "backend"
 
+# Model paths - can be overridden by environment variables
+DEFAULT_MODEL_PATH = BACKEND_DIR / "models" / "fake_news_lstm_model.keras"
+DEFAULT_TOKENIZER_PATH = BACKEND_DIR / "models" / "tokenizer.pkl"
+
 
 @dataclass
 class ModelConfig:
     """Machine Learning Model Configuration"""
-    MODEL_PATH: str = str(BACKEND_DIR / "models" / "fake_news_lstm_model.keras")
-    TOKENIZER_PATH: str = str(BACKEND_DIR / "models" / "tokenizer.pkl")
+    MODEL_PATH: str = os.getenv("MODEL_PATH", str(DEFAULT_MODEL_PATH))
+    TOKENIZER_PATH: str = os.getenv("TOKENIZER_PATH", str(DEFAULT_TOKENIZER_PATH))
     MAX_SEQUENCE_LENGTH: int = 150
     EMBEDDING_DIM: int = 100
     LSTM_UNITS: int = 150
