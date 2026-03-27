@@ -12,13 +12,36 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# Project root directory - use explicit path resolution
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-BACKEND_DIR = BASE_DIR / "backend"
+# Project root directory - try multiple ways to find it
+_script_dir = Path(__file__).resolve().parent
+_config_dir = _script_dir.parent
+_backend_dir = _config_dir.parent
+PROJECT_ROOT = _backend_dir.parent
 
-# Model paths - use absolute paths from base directory
+# Determine BACKEND_DIR - check multiple locations
+_possible_backend_dirs = [
+    _backend_dir,
+    PROJECT_ROOT / "backend",
+    Path("/app/backend"),
+    Path.cwd() / "backend",
+]
+
+BACKEND_DIR = None
+for d in _possible_backend_dirs:
+    if d.exists() and d.is_dir():
+        BACKEND_DIR = d
+        break
+
+if BACKEND_DIR is None:
+    BACKEND_DIR = _backend_dir
+
+# Model paths - allow override via environment variables
 MODEL_FILENAME = "fake_news_lstm_model.keras"
 TOKENIZER_FILENAME = "tokenizer.pkl"
+
+# Get model path from env var or use default
+_env_model_path = os.getenv("MODEL_PATH")
+_env_tokenizer_path = os.getenv("TOKENIZER_PATH")
 
 
 @dataclass
@@ -72,7 +95,7 @@ class AppConfig:
     
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
-    LOG_FILE: str = str(BASE_DIR / "logs" / "app.log")
+    LOG_FILE: str = str(PROJECT_ROOT / "logs" / "app.log")
     
     # API
     API_PREFIX: str = "/api/v1"
@@ -84,7 +107,7 @@ class AppConfig:
     CACHE_TTL: int = 300  # 5 minutes
     
     # Dataset
-    DATASET_PATH: str = str(BASE_DIR / "dataset")
+    DATASET_PATH: str = str(PROJECT_ROOT / "dataset")
     
     # Artifacts
     ARTIFACTS_PATH: str = str(BACKEND_DIR / "artifacts")
