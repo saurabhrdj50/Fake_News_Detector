@@ -13,14 +13,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Project root directory - try multiple ways to find it
-_script_dir = Path(__file__).resolve().parent
-_config_dir = _script_dir.parent
-_backend_dir = _config_dir.parent
-PROJECT_ROOT = _backend_dir.parent
+_script_dir = Path(__file__).resolve().parent  # backend/config/
+_config_dir = _script_dir.parent  # backend/
+PROJECT_ROOT = _config_dir.parent  # project root
 
 # Determine BACKEND_DIR - check multiple locations
 _possible_backend_dirs = [
-    _backend_dir,
+    _config_dir,
     PROJECT_ROOT / "backend",
     Path("/app/backend"),
     Path.cwd() / "backend",
@@ -33,22 +32,34 @@ for d in _possible_backend_dirs:
         break
 
 if BACKEND_DIR is None:
-    BACKEND_DIR = _backend_dir
+    BACKEND_DIR = _config_dir
 
 # Model paths - allow override via environment variables
 MODEL_FILENAME = "fake_news_lstm_model.keras"
 TOKENIZER_FILENAME = "tokenizer.pkl"
 
-# Get model path from env var or use default
-_env_model_path = os.getenv("MODEL_PATH")
-_env_tokenizer_path = os.getenv("TOKENIZER_PATH")
+
+def _get_model_path():
+    """Get model path from env var or use default"""
+    env_path = os.getenv("MODEL_PATH")
+    if env_path:
+        return env_path
+    return str(BACKEND_DIR / "models" / MODEL_FILENAME)
+
+
+def _get_tokenizer_path():
+    """Get tokenizer path from env var or use default"""
+    env_path = os.getenv("TOKENIZER_PATH")
+    if env_path:
+        return env_path
+    return str(BACKEND_DIR / "models" / TOKENIZER_FILENAME)
 
 
 @dataclass
 class ModelConfig:
     """Machine Learning Model Configuration"""
-    MODEL_PATH: str = os.getenv("MODEL_PATH", str(BACKEND_DIR / "models" / MODEL_FILENAME))
-    TOKENIZER_PATH: str = os.getenv("TOKENIZER_PATH", str(BACKEND_DIR / "models" / TOKENIZER_FILENAME))
+    MODEL_PATH: str = field(default_factory=_get_model_path)
+    TOKENIZER_PATH: str = field(default_factory=_get_tokenizer_path)
     MAX_SEQUENCE_LENGTH: int = 150
     EMBEDDING_DIM: int = 100
     LSTM_UNITS: int = 150
