@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 import os
 
-from tensorflow.keras.models import load_model
+import tensorflow as tf
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from backend.config.settings import model_config
 from backend.utils.text_processor import get_preprocessor
@@ -123,7 +123,18 @@ class ModelService:
             raise FileNotFoundError("Tokenizer file not found")
         
         logger.info(f"Loading model from {model_path}")
-        self.model = load_model(str(model_path))
+        
+        # Try .keras format first, then .h5
+        try:
+            self.model = tf.keras.models.load_model(str(model_path))
+        except Exception as e:
+            logger.warning(f"Failed to load .keras format, trying .h5: {e}")
+            h5_path = model_path.with_suffix('.h5')
+            if h5_path.exists():
+                self.model = tf.keras.models.load_model(str(h5_path))
+            else:
+                raise FileNotFoundError(f"Could not load model from {model_path} or {h5_path}")
+        
         logger.info("Model loaded successfully")
         
         logger.info(f"Loading tokenizer from {tokenizer_path}")
