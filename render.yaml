@@ -1,0 +1,41 @@
+# Render Blueprint Configuration
+# Deploys both backend API and serves frontend static files
+
+services:
+  # Backend API Service
+  - type: web
+    name: fake-news-api
+    env: python
+    region: oregon
+    buildCommand: |
+      pip install -r requirements.txt
+      git lfs install
+      git lfs pull
+      python verify_deployment.py
+    startCommand: cd backend && gunicorn api.main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
+    healthCheckPath: /health
+    plan: free
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: DEBUG
+        value: false
+
+  # Frontend Static Site
+  - type: web
+    name: fake-news-detector
+    env: static
+    region: oregon
+    buildCommand: |
+      cd frontend
+      npm install
+      npm run build
+    staticPublishPath: frontend/dist
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: ALLOWALL
+    routes:
+      - path: /
+        single_page: true
+    plan: free
