@@ -24,8 +24,12 @@ from backend.api.schemas import (
     BatchPredictionRequest,
     BatchPredictionResponse,
     HealthResponse,
-    ErrorResponse
+    ErrorResponse,
+    EnhancedPredictionRequest,
+    EnhancedPredictionResponse,
+    GeminiAnalysisResponse
 )
+from backend.services.gemini_service import get_gemini_service
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -136,6 +140,91 @@ async def predict(request: PredictionRequest):
         raise HTTPException(
             status_code=500,
             detail="Internal server error during prediction"
+        )
+
+
+@app.post(
+    "/api/v1/enhanced-predict",
+    response_model=EnhancedPredictionResponse,
+    tags=["Predictions"],
+    summary="Enhanced prediction with Gemini AI"
+)
+async def enhanced_predict(request: EnhancedPredictionRequest):
+    """
+    Predict whether a news article is fake or real with optional Gemini AI analysis
+    
+    **Parameters:**
+    - `text`: The news article text (10-5000 characters)
+    - `use_gemini`: Whether to use Gemini AI for detailed analysis (default: true)
+    
+    **Returns:**
+    - `label`: FAKE or REAL
+    - `confidence`: LSTM model confidence (0-100%)
+    - `prob_fake`: Probability of being fake
+    - `prob_real`: Probability of being real
+    - `gemini_analysis`: Detailed AI analysis (if available and requested)
+    - `gemini_available`: Whether Gemini is configured
+    """
+    try:
+        logger.info(f"Enhanced prediction request: {len(request.text)} chars, use_gemini={request.use_gemini}")
+        
+        model_service = get_model_service()
+        preprocessor = get_preprocessor()
+        
+        if not model_service.is_ready:
+            raise HTTPException(
+                status_code=503,
+                detail="Model service is not ready. Please try again later."
+            )
+        
+        is_valid, error_msg = preprocessor.validate_text(request.text)
+        if not is_valid:
+            logger.warning(f"Validation failed: {error_msg}")
+            raise HTTPException(status_code=400, detail=error_msg)
+        
+        label, confidence, prob_fake, prob_real = model_service.predict(request.text)
+        cleaned = preprocessor.clean_text(request.text)
+        
+        gemini_analysis = None
+        gemini_available = False
+        
+        if request.use_gemini:
+            gemini_service = get_gemini_service()
+            gemini_available = gemini_service.is_available
+            
+            if gemini_available:
+                logger.info("Getting Gemini AI analysis...")
+                gemini_result = await gemini_service.analyze_news(request.text)
+                
+                if gemini_result:
+                    gemini_analysis = GeminiAnalysisResponse(
+                        is_fake=gemini_result.is_fake,
+                        confidence=gemini_result.confidence,
+                        explanation=gemini_result.explanation,
+                        red_flags=gemini_result.red_flags,
+                        supporting_evidence=gemini_result.supporting_evidence,
+                        verdict=gemini_result.verdict
+                    )
+                    logger.info(f"Gemini analysis complete: {gemini_result.verdict}")
+        
+        return EnhancedPredictionResponse(
+            label=label,
+            confidence=round(confidence, 2),
+            prob_fake=round(prob_fake, 2),
+            prob_real=round(prob_real, 2),
+            original_length=len(request.text),
+            cleaned_length=len(cleaned),
+            gemini_analysis=gemini_analysis,
+            gemini_available=gemini_available
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Enhanced prediction error: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error during enhanced prediction"
         )
 
 

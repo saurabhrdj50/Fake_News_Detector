@@ -49,9 +49,31 @@ export interface PredictionResponse {
   cleaned_length: number;
 }
 
+export interface GeminiAnalysisResponse {
+  is_fake: boolean;
+  confidence: number;
+  explanation: string;
+  red_flags: string[];
+  supporting_evidence: string[];
+  verdict: string;
+}
+
+export interface EnhancedPredictionResponse extends PredictionResponse {
+  gemini_analysis: GeminiAnalysisResponse | null;
+  gemini_available: boolean;
+}
+
 export const predictionApi = {
   predict: async (text: string): Promise<PredictionResponse> => {
     const response = await apiClient.post<PredictionResponse>('/predict', { text });
+    return response.data;
+  },
+
+  enhancedPredict: async (text: string, useGemini: boolean = true): Promise<EnhancedPredictionResponse> => {
+    const response = await apiClient.post<EnhancedPredictionResponse>('/enhanced-predict', { 
+      text,
+      use_gemini: useGemini 
+    });
     return response.data;
   },
 

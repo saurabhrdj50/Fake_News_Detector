@@ -6,6 +6,15 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+export interface GeminiAnalysis {
+  is_fake: boolean;
+  confidence: number;
+  explanation: string;
+  red_flags: string[];
+  supporting_evidence: string[];
+  verdict: string;
+}
+
 export interface Prediction {
   label: string;
   confidence: number;
@@ -14,6 +23,8 @@ export interface Prediction {
   original_length: number;
   cleaned_length: number;
   timestamp?: number;
+  gemini_analysis?: GeminiAnalysis | null;
+  gemini_available?: boolean;
 }
 
 interface PredictionStore {
@@ -71,7 +82,7 @@ export const usePredictionStore = create<PredictionStore>()(
           history: [
             { ...prediction, timestamp: Date.now() },
             ...state.history
-          ].slice(0, 20), // Keep last 20 predictions
+          ].slice(0, 20),
           totalAnalyzed: state.totalAnalyzed + 1,
         })),
       

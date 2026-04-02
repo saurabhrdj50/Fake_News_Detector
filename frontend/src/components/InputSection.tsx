@@ -107,10 +107,7 @@ const InputSection = ({ darkMode }: InputSectionProps) => {
       setLoading(true);
       setError(null);
       
-      // Simulate processing animation
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const result = await predictionApi.predict(inputText);
+      const result = await predictionApi.enhancedPredict(inputText, true);
       setPrediction(result);
       addToHistory(result);
       toast.success('Analysis complete!', {

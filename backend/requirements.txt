@@ -1,6 +1,6 @@
 # =============================================================
 # Fake News Detector - Python Requirements
-# Backend: FastAPI + TensorFlow/Keras + NLTK
+# Backend: FastAPI + TensorFlow/Keras + NLTK + Gemini AI
 # Frontend: React (separate package.json)
 # =============================================================
 
@@ -19,6 +19,9 @@ numpy==1.26.4
 # ── Machine Learning ───────────────────────────────────────
 tensorflow==2.15.0
 scikit-learn>=1.3.0
+
+# ── AI Integration ─────────────────────────────────────────
+google-generativeai>=0.8.0
 
 # ── NLP Processing ────────────────────────────────────────
 nltk>=3.8.0
