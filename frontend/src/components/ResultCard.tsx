@@ -3,7 +3,7 @@
  * Enhanced with animated visualizations, share, and export features
  */
 
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, TrendingUp, Share2, Download, RefreshCw, Copy, ExternalLink } from 'lucide-react';
 import { usePredictionStore } from '../store/predictionStore';
 import { useState } from 'react';
