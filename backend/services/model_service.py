@@ -122,18 +122,18 @@ class ModelService:
         if tokenizer_path is None:
             raise FileNotFoundError("Tokenizer file not found")
         
-        logger.info(f"Loading model from {model_path}")
+        # Try .h5 format first (more compatible), then .keras
+        h5_path = model_path.with_suffix('.h5')
+        keras_path = model_path.with_suffix('.keras')
         
-        # Try .keras format first, then .h5
-        try:
-            self.model = tf.keras.models.load_model(str(model_path))
-        except Exception as e:
-            logger.warning(f"Failed to load .keras format, trying .h5: {e}")
-            h5_path = model_path.with_suffix('.h5')
-            if h5_path.exists():
-                self.model = tf.keras.models.load_model(str(h5_path))
-            else:
-                raise FileNotFoundError(f"Could not load model from {model_path} or {h5_path}")
+        if h5_path.exists():
+            logger.info(f"Loading model from .h5: {h5_path}")
+            self.model = tf.keras.models.load_model(str(h5_path))
+        elif keras_path.exists():
+            logger.info(f"Loading model from .keras: {keras_path}")
+            self.model = tf.keras.models.load_model(str(keras_path))
+        else:
+            raise FileNotFoundError(f"Neither .h5 nor .keras model found at {model_path}")
         
         logger.info("Model loaded successfully")
         
