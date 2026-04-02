@@ -11,8 +11,15 @@ def verify_deployment():
     """Verify all required files are present for deployment."""
     print("=== Render Deployment Verification ===")
     
-    # Get paths
-    backend_dir = Path(__file__).parent / "backend"
+    # Get paths - script is in backend/, so parent is backend dir
+    script_dir = Path(__file__).parent.resolve()
+    
+    # Check if we're running from project root or backend dir
+    if script_dir.name == "backend":
+        backend_dir = script_dir
+    else:
+        backend_dir = script_dir / "backend"
+    
     models_dir = backend_dir / "models"
     
     print(f"Backend dir: {backend_dir}")
