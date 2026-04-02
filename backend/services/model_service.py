@@ -53,6 +53,8 @@ class ModelService:
     
     def _load_artifacts(self) -> None:
         """Load model and tokenizer from disk"""
+        import traceback
+        
         logger.info(f"Current working directory: {os.getcwd()}")
         logger.info(f"__file__: {__file__}")
         
@@ -61,86 +63,87 @@ class ModelService:
         backend_dir = script_dir.parent  # backend/
         project_root = backend_dir.parent  # project root
         
-        logger.info(f"Backend dir: {backend_dir}")
+        logger.info(f"Backend dir: {backend_dir}, exists: {backend_dir.exists()}")
         logger.info(f"Project root: {project_root}")
-        
-        # Search for model files in multiple locations
-        possible_model_locations = [
-            backend_dir / "models" / "fake_news_lstm_model.keras",
-            backend_dir / "artifacts" / "fake_news_lstm_model.keras",
-            project_root / "models" / "fake_news_lstm_model.keras",
-            Path("/app/backend/models/fake_news_lstm_model.keras"),
-            Path("/app/backend/artifacts/fake_news_lstm_model.keras"),
-        ]
         
         # Check environment variables first
         env_model_path = os.getenv("MODEL_PATH")
         env_tokenizer_path = os.getenv("TOKENIZER_PATH")
         
-        if env_model_path:
-            possible_model_locations.insert(0, Path(env_model_path))
-        if env_tokenizer_path:
-            possible_model_locations.insert(0, Path(env_tokenizer_path))
-        
         # Find model path
         model_path = None
-        for loc in possible_model_locations:
-            logger.info(f"Checking model path: {loc}")
-            if loc.exists():
-                model_path = loc
-                logger.info(f"Found model at: {model_path}")
-                break
         
+        # Check env var first
+        if env_model_path:
+            p = Path(env_model_path)
+            logger.info(f"Checking env MODEL_PATH: {p}, exists: {p.exists()}")
+            if p.exists():
+                model_path = p
+        
+        # Check default locations
         if model_path is None:
-            # Log all available files in backend directory
-            logger.error(f"Model not found in any location")
-            logger.error(f"Contents of {backend_dir}: {list(backend_dir.glob('*'))}")
-            if backend_dir.exists():
-                for p in backend_dir.rglob('*'):
-                    if p.is_file():
-                        logger.error(f"Found file: {p}")
+            for loc in [
+                backend_dir / "models" / "fake_news_lstm_model.h5",
+                backend_dir / "models" / "fake_news_lstm_model.keras",
+                backend_dir / "models" / "fake_news_lstm_model",
+                backend_dir / "artifacts" / "fake_news_lstm_model.h5",
+                backend_dir / "artifacts" / "fake_news_lstm_model.keras",
+            ]:
+                logger.info(f"Checking: {loc}, exists: {loc.exists()}")
+                if loc.exists():
+                    model_path = loc
+                    break
+        
+        # If still not found, list all files in backend dir
+        if model_path is None:
+            logger.error(f"Model not found! Listing backend dir contents:")
+            for item in backend_dir.glob('**/*'):
+                if item.is_file():
+                    logger.error(f"  Found: {item}")
             raise FileNotFoundError("Model file not found")
+        
+        logger.info(f"Loading model from: {model_path}")
         
         # Find tokenizer path
         tokenizer_path = None
-        possible_tokenizer_locations = [
-            backend_dir / "models" / "tokenizer.pkl",
-            backend_dir / "artifacts" / "tokenizer.pkl",
-            project_root / "models" / "tokenizer.pkl",
-            Path("/app/backend/models/tokenizer.pkl"),
-            Path("/app/backend/artifacts/tokenizer.pkl"),
-        ]
         
         if env_tokenizer_path:
-            possible_tokenizer_locations.insert(0, Path(env_tokenizer_path))
+            p = Path(env_tokenizer_path)
+            if p.exists():
+                tokenizer_path = p
         
-        for loc in possible_tokenizer_locations:
-            if loc.exists():
-                tokenizer_path = loc
-                break
+        if tokenizer_path is None:
+            for loc in [
+                backend_dir / "models" / "tokenizer.pkl",
+                backend_dir / "artifacts" / "tokenizer.pkl",
+            ]:
+                if loc.exists():
+                    tokenizer_path = loc
+                    break
         
         if tokenizer_path is None:
             raise FileNotFoundError("Tokenizer file not found")
         
-        # Try .h5 format first (more compatible), then .keras
-        h5_path = model_path.with_suffix('.h5')
-        keras_path = model_path.with_suffix('.keras')
+        logger.info(f"Loading tokenizer from: {tokenizer_path}")
         
-        if h5_path.exists():
-            logger.info(f"Loading model from .h5: {h5_path}")
-            self.model = tf.keras.models.load_model(str(h5_path))
-        elif keras_path.exists():
-            logger.info(f"Loading model from .keras: {keras_path}")
-            self.model = tf.keras.models.load_model(str(keras_path))
-        else:
-            raise FileNotFoundError(f"Neither .h5 nor .keras model found at {model_path}")
+        try:
+            # Load model
+            self.model = tf.keras.models.load_model(str(model_path))
+            logger.info("Model loaded successfully")
+        except Exception as e:
+            logger.error(f"Error loading model: {e}")
+            logger.error(traceback.format_exc())
+            raise
         
-        logger.info("Model loaded successfully")
-        
-        logger.info(f"Loading tokenizer from {tokenizer_path}")
-        with open(str(tokenizer_path), "rb") as f:
-            self.tokenizer = pickle.load(f)
-        logger.info("Tokenizer loaded successfully")
+        try:
+            # Load tokenizer
+            with open(str(tokenizer_path), "rb") as f:
+                self.tokenizer = pickle.load(f)
+            logger.info("Tokenizer loaded successfully")
+        except Exception as e:
+            logger.error(f"Error loading tokenizer: {e}")
+            logger.error(traceback.format_exc())
+            raise
     
     def predict(self, text: str) -> Tuple[str, float, float, float]:
         """
