@@ -53,26 +53,74 @@ class ModelService:
     
     def _load_artifacts(self) -> None:
         """Load model and tokenizer from disk"""
-        model_path = Path(model_config.MODEL_PATH)
-        tokenizer_path = Path(model_config.TOKENIZER_PATH)
+        logger.info(f"Current working directory: {os.getcwd()}")
+        logger.info(f"__file__: {__file__}")
         
-        logger.info(f"CWD: {os.getcwd()}")
-        logger.info(f"settings.py location: {Path(__file__).parent.parent / 'config'}")
-        logger.info(f"PROJECT_ROOT: {model_config.MODEL_PATH}")
-        logger.info(f"Model path exists: {model_path.exists()}, resolved: {model_path.resolve()}")
-        logger.info(f"Tokenizer path exists: {tokenizer_path.exists()}")
+        # Find the backend directory
+        script_dir = Path(__file__).resolve().parent  # backend/services/
+        backend_dir = script_dir.parent  # backend/
+        project_root = backend_dir.parent  # project root
         
-        if not model_path.exists():
-            # Try absolute path
-            abs_model_path = Path(__file__).parent.parent.parent / "backend" / "models" / "fake_news_lstm_model.keras"
-            logger.info(f"Trying absolute path: {abs_model_path}")
-            if abs_model_path.exists():
-                model_path = abs_model_path
-            else:
-                # List all files in backend/models
-                models_dir = Path(__file__).parent.parent.parent / "backend" / "models"
-                logger.info(f"Files in {models_dir}: {list(models_dir.glob('*')) if models_dir.exists() else 'DIR NOT FOUND'}")
-                raise FileNotFoundError(f"Model file not found at {model_path}")
+        logger.info(f"Backend dir: {backend_dir}")
+        logger.info(f"Project root: {project_root}")
+        
+        # Search for model files in multiple locations
+        possible_model_locations = [
+            backend_dir / "models" / "fake_news_lstm_model.keras",
+            backend_dir / "artifacts" / "fake_news_lstm_model.keras",
+            project_root / "models" / "fake_news_lstm_model.keras",
+            Path("/app/backend/models/fake_news_lstm_model.keras"),
+            Path("/app/backend/artifacts/fake_news_lstm_model.keras"),
+        ]
+        
+        # Check environment variables first
+        env_model_path = os.getenv("MODEL_PATH")
+        env_tokenizer_path = os.getenv("TOKENIZER_PATH")
+        
+        if env_model_path:
+            possible_model_locations.insert(0, Path(env_model_path))
+        if env_tokenizer_path:
+            possible_model_locations.insert(0, Path(env_tokenizer_path))
+        
+        # Find model path
+        model_path = None
+        for loc in possible_model_locations:
+            logger.info(f"Checking model path: {loc}")
+            if loc.exists():
+                model_path = loc
+                logger.info(f"Found model at: {model_path}")
+                break
+        
+        if model_path is None:
+            # Log all available files in backend directory
+            logger.error(f"Model not found in any location")
+            logger.error(f"Contents of {backend_dir}: {list(backend_dir.glob('*'))}")
+            if backend_dir.exists():
+                for p in backend_dir.rglob('*'):
+                    if p.is_file():
+                        logger.error(f"Found file: {p}")
+            raise FileNotFoundError("Model file not found")
+        
+        # Find tokenizer path
+        tokenizer_path = None
+        possible_tokenizer_locations = [
+            backend_dir / "models" / "tokenizer.pkl",
+            backend_dir / "artifacts" / "tokenizer.pkl",
+            project_root / "models" / "tokenizer.pkl",
+            Path("/app/backend/models/tokenizer.pkl"),
+            Path("/app/backend/artifacts/tokenizer.pkl"),
+        ]
+        
+        if env_tokenizer_path:
+            possible_tokenizer_locations.insert(0, Path(env_tokenizer_path))
+        
+        for loc in possible_tokenizer_locations:
+            if loc.exists():
+                tokenizer_path = loc
+                break
+        
+        if tokenizer_path is None:
+            raise FileNotFoundError("Tokenizer file not found")
         
         logger.info(f"Loading model from {model_path}")
         self.model = load_model(str(model_path))
